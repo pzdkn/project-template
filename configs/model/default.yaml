@@ -1,0 +1,7 @@
+# model/default.yaml
+# @package model
+
+instantiation: 
+  _target_: null
+
+cfg:

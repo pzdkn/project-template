@@ -1,0 +1,26 @@
+# @package _global_
+
+# Default configuration
+defaults:
+  - model: default
+  - dataset: default
+  - logging: default
+  - experiment: default
+  - _self_
+
+
+device: null 
+seed: null 
+run_name: ${experiment.name}
+tags: ["${experiment.name}",
+       ]
+
+results_dir: "${hydra:runtime.cwd}/results/${run_name}"
+data_dir: "${hydra:runtime.cwd}/data"
+
+hydra:
+  run:
+    dir: ${results_dir}/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: ${results_dir}/${now:%Y-%m-%d_%H-%M-%S}
+    subdir: ${hydra.job.num}

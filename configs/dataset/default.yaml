@@ -1,0 +1,13 @@
+# dataset/default.yaml
+# @package dataset
+
+defaults:
+  - _self_
+
+bs: null 
+
+train:
+  _target_: null
+  
+val:
+  _target_: null
