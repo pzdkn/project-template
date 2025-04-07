@@ -1,0 +1,62 @@
+# IDEs and OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Python
+**/__pycache__/
+**/*.py[cod]
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.env
+.venv/
+env/
+venv/
+
+# Hydra config outputs
+**/outputs/
+**/.hydra/
+
+# PyTorch Lightning
+**/lightning_logs/
+**/checkpoints/
+
+# Data
+**/data/
+examples/data/
+**/img/
+**/results/
+
+# Weights & Biases
+**/wandb/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Testing
+.pytest_cache/
+.tox/
+.coverage
+htmlcov/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# MyPy and other linters
+.mypy_cache/
+.cache/
+.dmypy.json
+.pyre/
+.pytype/
+.pre-commit-config.yaml
