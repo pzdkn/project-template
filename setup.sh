@@ -1,10 +1,15 @@
 #!/bin/bash
 
+# === Python Project Setup Script ===
+# This script bootstraps a deep learning project with Poetry.
+# It optionally installs common dependencies and copies reusable boilerplate code.
+
 echo "=== 🐍 Python Project Setup with Poetry ==="
 
 ########################################
 # 0. Check for existing pyproject.toml #
 ########################################
+# Prevents overwriting an existing project unless explicitly allowed.
 if [[ -f pyproject.toml ]]; then
   echo "⚠️  Found an existing pyproject.toml."
   read -p "Overwrite it with a new project scaffold? [y/n]: " OVERWRITE
@@ -20,30 +25,33 @@ fi
 #################################
 # 1. Collect Project Metadata   #
 #################################
+# Ask the user for key information needed to scaffold the pyproject.toml
 read -p "📛 Project name: " PROJECT_NAME
 read -p "🧾 Description: " DESCRIPTION
 read -p "👤 Author name: " AUTHOR_NAME
 read -p "📧 Author email: " AUTHOR_EMAIL
 read -p "🐍 Python version [>=3.9]: " PYTHON_VERSION
-PYTHON_VERSION=${PYTHON_VERSION:-">=3.9"}
+PYTHON_VERSION=${PYTHON_VERSION:-">=3.9"}  # Use default if left blank
 read -p "📁 Source folder [src]: " SRC_FOLDER
-SRC_FOLDER=${SRC_FOLDER:-"src"}
+SRC_FOLDER=${SRC_FOLDER:-"src"}  # Default to "src" if not specified
 
 ############################################################
 # 2. Ask If We Should Add Standard Dependencies via Poetry #
 ############################################################
+# These dependencies are commonly used in ML/DL/data projects.
 read -p "📦 Add default ML dependencies (torch, hydra-core, pytorch-lightning)? [Y/n]: " ADD_DEFAULT_DEPS
-ADD_DEFAULT_DEPS=${ADD_DEFAULT_DEPS:-"y"}  # default "yes"
+ADD_DEFAULT_DEPS=${ADD_DEFAULT_DEPS:-"y"}
 
 read -p "📊 Add data science libs (numpy, pandas, matplotlib, etc)? [Y/n]: " ADD_DS
-ADD_DS=${ADD_DS:-"y"}  # default "yes"
+ADD_DS=${ADD_DS:-"y"}
 
 read -p "⚙️  Add dev dependencies (pytest, jupyter, ipykernel, wandb)? [Y/n]: " ADD_DEV_DEPS
-ADD_DEV_DEPS=${ADD_DEV_DEPS:-"y"}  # default "yes"
+ADD_DEV_DEPS=${ADD_DEV_DEPS:-"y"}
 
 #######################################
 # 3. Write a Minimal pyproject.toml   #
 #######################################
+# Generates the pyproject.toml used by Poetry to define the package
 cat <<EOF > pyproject.toml
 [project]
 name = "$PROJECT_NAME"
@@ -52,10 +60,9 @@ description = "$DESCRIPTION"
 authors = [{ name = "$AUTHOR_NAME", email = "$AUTHOR_EMAIL" }]
 readme = "README.md"
 requires-python = "$PYTHON_VERSION"
-# Minimal placeholder for dependencies
-dependencies = []
+dependencies = []  # Placeholder; real deps added later
 
-# Telling Poetry how to find our package code
+# Tell Poetry how to find the actual code
 packages = [{ include = "$PROJECT_NAME", from = "$SRC_FOLDER" }]
 
 [build-system]
@@ -64,41 +71,76 @@ build-backend = "poetry.core.masonry.api"
 EOF
 
 ##############################
-# 4. Poetry Add Dependencies #
+# 4. Copy Boilerplate Code   #
 ##############################
+echo " Copying boilerplate code..."
+
+# Create base project folder and init file
 mkdir -p "$SRC_FOLDER/$PROJECT_NAME"
 touch "$SRC_FOLDER/$PROJECT_NAME/__init__.py"
 
-echo "📦 Installing base to create poetry.lock..."
-poetry install
+# Define where your templates are stored
+TEMPLATE_DIR="./templates"
 
-# Add default ML dependencies if "y"
+# Check if templates folder exists
+if [[ ! -d "$TEMPLATE_DIR" ]]; then
+  echo "❌ $TEMPLATE_DIR not found. Make sure you're running this from the root of the template repo."
+  exit 1
+fi
+
+# Optionally copy experiment-related templates
+read -p "📦 Copy experiment templates? [Y/n]: " COPY_EXPERIMENT
+COPY_EXPERIMENT=${COPY_EXPERIMENT:-"y"}
+
+if [[ "$COPY_EXPERIMENT" =~ ^[Yy]$ ]]; then
+  echo "🔬 Copying experiment setup to $SRC_FOLDER/$PROJECT_NAME/experiment"
+  mkdir -p "$SRC_FOLDER/$PROJECT_NAME/experiment"
+  cp -r ./templates/experiment/* "$SRC_FOLDER/$PROJECT_NAME/experiment"
+  touch "$SRC_FOLDER/$PROJECT_NAME/experiment/__init__.py"
+fi
+
+# Optionally copy logging utilities
+read -p "📦 Copy logging templates? [Y/n]: " COPY_LOGGING
+COPY_LOGGING=${COPY_LOGGING:-"y"}
+
+if [[ "$COPY_LOGGING" =~ ^[Yy]$ ]]; then
+  echo "🧠 Copying logging utils to $SRC_FOLDER/$PROJECT_NAME/logging"
+  mkdir -p "$SRC_FOLDER/$PROJECT_NAME/logging"
+  cp -r ./templates/logging/* "$SRC_FOLDER/$PROJECT_NAME/logging"
+  touch "$SRC_FOLDER/$PROJECT_NAME/logging/__init__.py"
+fi 
+
+echo "🧽 Copying .gitignore "
+cp ./templates/gitignore .gitignore
+
+##############################
+# 5. Poetry Add Dependencies #
+##############################
+
+echo "📦 Installing base to create poetry.lock..."
+poetry install # Creates the virtual environment and lock file
+
+# Add common ML packages
 if [[ "$ADD_DEFAULT_DEPS" =~ ^[Yy]$ ]]; then
   echo "📦 Adding ML deps with version pinning..."
   poetry add torch torchvision hydra-core pytorch-lightning
 fi
 
-# Add data-science packages if "y"
+# Add common data science packages
 if [[ "$ADD_DS" =~ ^[Yy]$ ]]; then
   echo "📊 Adding data science deps..."
   poetry add numpy pandas matplotlib tqdm scikit-learn seaborn
 fi
 
-# Add dev dependencies if "y"
+# Add developer tools
 if [[ "$ADD_DEV_DEPS" =~ ^[Yy]$ ]]; then
   echo "⚙️  Adding dev tools..."
   poetry add --group dev pytest jupyter ipykernel wandb
 fi
 
-# Validate final pyproject
+# Validate that the pyproject.toml is still sane
 echo "🔍 Validating pyproject.toml..."
 poetry check
-
-###################################
-# 5. Create Source Code Scaffold  #
-###################################
-mkdir -p "$SRC_FOLDER/$PROJECT_NAME"
-touch "$SRC_FOLDER/$PROJECT_NAME/__init__.py"
 
 echo "📝 Your pyproject.toml now contains pinned versions from 'poetry add'."
 
@@ -107,18 +149,18 @@ echo "📝 Your pyproject.toml now contains pinned versions from 'poetry add'."
 ###################################
 echo
 echo "=== 🔧 Pre-commit and Linters Setup ==="
+
+# Prompt for optional linters/formatters
 read -p "Add Black for code formatting? [Y/n]: " ADD_BLACK
 ADD_BLACK=${ADD_BLACK:-"y"}
 
 read -p "Add isort for import sorting? [Y/n]: " ADD_ISORT
 ADD_ISORT=${ADD_ISORT:-"y"}
 
-read -p "Add yamllint for YAML checks? [y/N]: " ADD_YAMLLINT
-ADD_YAMLLINT=${ADD_YAMLLINT:-"n"}
-
-# We assume we ALWAYS want ruff + pre-commit
+# Always add Ruff + pre-commit as a baseline
 poetry add --group dev pre-commit ruff
 
+# Add optional linters
 if [[ "$ADD_BLACK" =~ ^[Yy]$ ]]; then
   poetry add --group dev black
 fi
@@ -127,11 +169,7 @@ if [[ "$ADD_ISORT" =~ ^[Yy]$ ]]; then
   poetry add --group dev isort
 fi
 
-if [[ "$ADD_YAMLLINT" =~ ^[Yy]$ ]]; then
-  poetry add --group dev yamllint
-fi
-
-# Build up a .pre-commit-config.yaml in a variable
+# Build pre-commit config from user selections
 PRE_COMMIT_CONTENT="repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.3.0
@@ -140,6 +178,7 @@ PRE_COMMIT_CONTENT="repos:
         args: [--fix]
 "
 
+# Append extra hooks based on user choice
 if [[ "$ADD_BLACK" =~ ^[Yy]$ ]]; then
 PRE_COMMIT_CONTENT+="
   - repo: https://github.com/psf/black
@@ -160,16 +199,7 @@ PRE_COMMIT_CONTENT+="
 "
 fi
 
-if [[ "$ADD_YAMLLINT" =~ ^[Yy]$ ]]; then
-PRE_COMMIT_CONTENT+="
-  - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.31.0
-    hooks:
-      - id: yamllint
-"
-fi
-
-# If there's an existing config, ask to overwrite or append
+# Handle existing pre-commit config safely
 if [[ -f .pre-commit-config.yaml ]]; then
   echo "⚠️  .pre-commit-config.yaml already exists."
   read -p "Overwrite [o], append [a], or skip [s]? [o/a/s]: " PC_CHOICE
@@ -195,7 +225,7 @@ else
   echo "$PRE_COMMIT_CONTENT" > .pre-commit-config.yaml
 fi
 
-# Install or update the pre-commit hooks
+# Install and run pre-commit if config exists
 if [[ -f .pre-commit-config.yaml ]]; then
   echo "⚙️  Installing pre-commit Git hook..."
   poetry run pre-commit install
@@ -205,5 +235,6 @@ if [[ -f .pre-commit-config.yaml ]]; then
 else
   echo "❌ Skipped creating .pre-commit-config.yaml, so no hooks installed."
 fi
+
 
 echo "🚀 Setup script complete!"
