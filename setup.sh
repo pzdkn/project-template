@@ -28,10 +28,23 @@ fi
 # Ask the user for key information needed to scaffold the pyproject.toml
 while true; do
   read -p "📛 Project name: " PROJECT_NAME
-
-  # If project name contains a dash, ask again
+  
+  # Convert spaces to underscores
+  ORIGINAL_PROJECT_NAME="$PROJECT_NAME"
+  PROJECT_NAME="${PROJECT_NAME// /_}"
+  
+  # Check for dashes and other invalid characters
   if [[ "$PROJECT_NAME" == *"-"* ]]; then
-    echo "⚠️  Please remove the dash from the project name. Python does not allow dashses in package name."
+    echo "⚠️  Please remove the dash from the project name. Python does not allow dashes in package name."
+  elif [[ "$PROJECT_NAME" =~ [^a-zA-Z0-9_] ]]; then
+    echo "⚠️  Project name contains invalid characters. Only use letters, numbers, and underscores."
+  elif [[ "$PROJECT_NAME" != "$ORIGINAL_PROJECT_NAME" ]]; then
+    echo "ℹ️  Project name converted to: $PROJECT_NAME"
+    read -p "Continue with this name? [Y/n]: " USE_CONVERTED
+    USE_CONVERTED=${USE_CONVERTED:-"y"}
+    if [[ "$USE_CONVERTED" =~ ^[Yy]$ ]]; then
+      break
+    fi
   else
     break
   fi
@@ -81,6 +94,61 @@ build-backend = "poetry.core.masonry.api"
 EOF
 
 ##############################
+# 3a. Create README.md file  #
+##############################
+echo "📝 Creating README.md file..."
+
+cat <<EOF > README.md
+# $PROJECT_NAME
+
+$DESCRIPTION
+
+## Setup
+
+This project uses [Poetry](https://python-poetry.org/) for dependency management.
+
+\`\`\`bash
+# Install dependencies
+poetry install
+
+# Activate the virtual environment
+poetry shell
+\`\`\`
+
+## Project Structure
+
+\`\`\`
+$SRC_FOLDER/
+└── $PROJECT_NAME/
+    ├── __init__.py
+EOF
+
+# Add experiment to README if enabled
+if [[ "$COPY_EXPERIMENT" =~ ^[Yy]$ ]]; then
+  cat <<EOF >> README.md
+    ├── experiment/
+    │   └── ...
+EOF
+fi
+
+# Add logging to README if enabled
+if [[ "$COPY_LOGGING" =~ ^[Yy]$ ]]; then
+  cat <<EOF >> README.md
+    ├── logging/
+    │   └── ...
+EOF
+fi
+
+# Close README structure
+cat <<EOF >> README.md
+\`\`\`
+
+## Development
+
+This project uses pre-commit hooks to ensure code quality. Run \`pre-commit install\` to set up the hooks.
+EOF
+
+##############################
 # 4. Copy Boilerplate Code   #
 ##############################
 echo " Copying boilerplate code..."
@@ -119,7 +187,6 @@ if [[ "$COPY_LOGGING" =~ ^[Yy]$ ]]; then
   cp -r ./templates/logging/* "$SRC_FOLDER/$PROJECT_NAME/logging"
   touch "$SRC_FOLDER/$PROJECT_NAME/logging/__init__.py"
 fi 
-
 
 echo "🧽 Copying .gitignore "
 cp ./templates/gitignore .gitignore
@@ -249,7 +316,6 @@ else
   echo "❌ Skipped creating .pre-commit-config.yaml, so no hooks installed."
 fi
 
-
 # Check if running in a git repo and offer to reinitialize
 if [ -d ".git" ]; then
     echo "📁 Found existing git repository"
@@ -266,4 +332,105 @@ if [ -d ".git" ]; then
     fi
 fi
 
+###################################
+# 7. Verification Step            #
+###################################
+echo
+echo "=== 🔍 Verification of Setup ==="
+echo "Checking for required files and directories..."
+
+# List of files and directories to verify
+VERIFICATION_PASSED=true
+
+# Check source directory and main package
+if [[ ! -d "$SRC_FOLDER/$PROJECT_NAME" ]]; then
+  echo "❌ Source directory not found: $SRC_FOLDER/$PROJECT_NAME"
+  VERIFICATION_PASSED=false
+else
+  echo "✅ Source directory created: $SRC_FOLDER/$PROJECT_NAME"
+fi
+
+# Check pyproject.toml
+if [[ ! -f "pyproject.toml" ]]; then
+  echo "❌ pyproject.toml not found!"
+  VERIFICATION_PASSED=false
+else
+  echo "✅ pyproject.toml created"
+fi
+
+# Check poetry.lock
+if [[ ! -f "poetry.lock" ]]; then
+  echo "❌ poetry.lock not found! Dependencies may not be installed correctly."
+  VERIFICATION_PASSED=false
+else
+  echo "✅ poetry.lock created"
+fi
+
+# Check README.md
+if [[ ! -f "README.md" ]]; then
+  echo "❌ README.md not found!"
+  VERIFICATION_PASSED=false
+else
+  echo "✅ README.md created"
+fi
+
+# Check .gitignore
+if [[ ! -f ".gitignore" ]]; then
+  echo "❌ .gitignore not found!"
+  VERIFICATION_PASSED=false
+else
+  echo "✅ .gitignore created"
+fi
+
+# Check pre-commit config
+if [[ ! -f ".pre-commit-config.yaml" ]]; then
+  echo "⚠️ .pre-commit-config.yaml not found - pre-commit may not be set up"
+else
+  echo "✅ .pre-commit-config.yaml created"
+fi
+
+# Check git setup
+if [[ ! -d ".git" ]]; then
+  echo "⚠️ Git repository not initialized"
+else
+  echo "✅ Git repository initialized"
+fi
+
+# Check if experiment folder is created when expected
+if [[ "$COPY_EXPERIMENT" =~ ^[Yy]$ && ! -d "$SRC_FOLDER/$PROJECT_NAME/experiment" ]]; then
+  echo "❌ Experiment templates not copied correctly!"
+  VERIFICATION_PASSED=false
+elif [[ "$COPY_EXPERIMENT" =~ ^[Yy]$ ]]; then
+  echo "✅ Experiment templates copied"
+fi
+
+# Check if logging folder is created when expected
+if [[ "$COPY_LOGGING" =~ ^[Yy]$ && ! -d "$SRC_FOLDER/$PROJECT_NAME/logging" ]]; then
+  echo "❌ Logging templates not copied correctly!"
+  VERIFICATION_PASSED=false
+elif [[ "$COPY_LOGGING" =~ ^[Yy]$ ]]; then
+  echo "✅ Logging templates copied"
+fi
+
+# Final verification message
+if [[ "$VERIFICATION_PASSED" == true ]]; then
+  echo "✅ All critical files and directories verified!"
+else
+  echo "⚠️ Some files or directories are missing. Setup may be incomplete."
+  echo "Please check the logs above for details."
+  
+  # Ask if user wants to continue despite verification issues
+  read -p "Continue and finish setup anyway? [Y/n]: " CONTINUE_SETUP
+  CONTINUE_SETUP=${CONTINUE_SETUP:-"y"}
+  
+  if [[ ! "$CONTINUE_SETUP" =~ ^[Yy]$ ]]; then
+    echo "Setup aborted. Please fix the issues and try again."
+    exit 1
+  fi
+fi
+
 echo "🚀 Setup script complete!"
+
+# Remove Setup Script
+echo "🧹 Removing Setup Script"
+rm -- "$0"
