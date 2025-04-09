@@ -237,4 +237,20 @@ else
 fi
 
 
+# Check if running in a git repo and offer to reinitialize
+if [ -d ".git" ]; then
+    echo "📁 Found existing git repository"
+    read -p "Would you like to reinitialize git (remove template history)? [Y/n]: " REINIT_GIT
+    REINIT_GIT=${REINIT_GIT:-"y"}
+    
+    if [[ "$REINIT_GIT" =~ ^[Yy]$ ]]; then
+        echo "🔄 Removing existing git history..."
+        rm -rf .git
+        git init
+        echo "✅ Initialized fresh git repository"
+    else
+        echo "⏭️ Keeping existing git history"
+    fi
+fi
+
 echo "🚀 Setup script complete!"
