@@ -26,7 +26,17 @@ fi
 # 1. Collect Project Metadata   #
 #################################
 # Ask the user for key information needed to scaffold the pyproject.toml
-read -p "📛 Project name: " PROJECT_NAME
+while true; do
+  read -p "📛 Project name: " PROJECT_NAME
+
+  # If project name contains a dash, ask again
+  if [[ "$PROJECT_NAME" == *"-"* ]]; then
+    echo "⚠️  Please remove the dash from the project name. Python does not allow dashses in package name."
+  else
+    break
+  fi
+done
+
 read -p "🧾 Description: " DESCRIPTION
 read -p "👤 Author name: " AUTHOR_NAME
 read -p "📧 Author email: " AUTHOR_EMAIL
@@ -60,7 +70,7 @@ description = "$DESCRIPTION"
 authors = [{ name = "$AUTHOR_NAME", email = "$AUTHOR_EMAIL" }]
 readme = "README.md"
 requires-python = "$PYTHON_VERSION"
-dependencies = []  # Placeholder; real deps added later
+dependencies = []  
 
 # Tell Poetry how to find the actual code
 packages = [{ include = "$PROJECT_NAME", from = "$SRC_FOLDER" }]
@@ -110,9 +120,12 @@ if [[ "$COPY_LOGGING" =~ ^[Yy]$ ]]; then
   touch "$SRC_FOLDER/$PROJECT_NAME/logging/__init__.py"
 fi 
 
+
 echo "🧽 Copying .gitignore "
 cp ./templates/gitignore .gitignore
 
+echo "🧽 Removing templates "
+rm -rf templates
 ##############################
 # 5. Poetry Add Dependencies #
 ##############################
