@@ -1,47 +1,62 @@
-# Project Template
+# 🚀 Project Template 
 
-**TL;DR**:  
-Use this template for data science projects. It comes with:
-- **Poetry** for dependency management
-- **Hydra** for composable configurations
-- **PyTorch Lightning** + **PyTorch** for deep learning
-- **WandB** for experiment tracking
-- Pre-configured **linters** for code quality
+This repository provides a structured template for machine learning and deep learning projects. It includes a setup script that automates environment creation, dependency installation, code quality configuration, and boilerplate injection.
 
----
+## ✨ Features
 
-## Features
+* 🛠️ Poetry-based environment management with reproducible lockfiles
+* ⚡ PyTorch Lightning and Torch for model training workflows
+* 🧩 Hydra for modular and composable configuration management
+* 📈 Optional integration with Weights & Biases (WandB) for experiment tracking
+* 🗂️ Unified logging wrapper compatible with WandB and TensorBoard
+* 🧹 Pre-configured pre-commit hooks for code formatting and linting
 
-- **Poetry Environment**: Reproducible builds and easy package installation.  
-- **Hydra Configs**: Composable YAMLs for flexible experiment management.  
-- **WandB**: (Optional) track experiments, logs, hyperparameters.  
-- **Lightning + Torch**: Streamlined deep learning workflows.  
-- **Linters**: E.g., `flake8` to maintain consistent style.
+## 🏃‍♂️ Quick Start
 
-## Quick Start
-
-1. **Install Poetry**  
+1. Install Poetry
    ```bash
    curl -sSL https://install.python-poetry.org | python3 -
+   ```
 
-```poetry install
-poetry shell
-```
+2. Run the setup script
+   ```bash
+   bash setup.sh
+   ```
 
-2. **Set Up**
-``` bash ./setup.sh ```
+   During setup, you will be prompted to enter:
+   * Project name and metadata
+   * Preferred source folder (default: src)
+   * Whether to include default ML, data science, and developer dependencies
+   * Whether to include experiment and logging templates
+   * Which code linters to use 
 
-### Hydra Structure
+3. Activate the virtual environment
+   ```bash
+   poetry shell
+   ```
+
+## 🔧 Configuration Structure (Hydra)
+
+The Hydra configuration follows a modular layout:
+
 ```
 .
-├─ configs/
-│   ├─ config.yaml         # Merges sub-configs
-│   ├─ model/
-│   │   └─ default.yaml
-│   ├─ dataset/
-│   │   └─ default.yaml
-│   ├─ logging/
-│   │   └─ default.yaml
-│   └─ experiment/
-│       └─ default.yaml
+├── configs
+│   ├── config.yaml
+│   ├── model/
+│   │   └── default.yaml
+│   ├── dataset/
+│   │   └── default.yaml
+│   ├── logging/
+│   │   └── default.yaml
+│   └── experiment/
+│       └── default.yaml
 ```
+
+## 📝 Notes
+
+* Your project code will live in `src/your_project_name/`
+* The project is installed in editable mode by default
+* Pre-commit hooks are installed automatically if selected during setup
+
+This template is designed to streamline early development and promote reproducible, clean, and maintainable workflows! 💯
