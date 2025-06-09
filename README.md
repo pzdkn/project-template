@@ -17,6 +17,7 @@ This repository provides a structured template for machine learning and deep lea
    ```bash
    curl -sSL https://install.python-poetry.org | python3 -
    ```
+1.1 Change the folder name from 'project_template" to your project name.
 
 2. Run the setup script
    ```bash
