@@ -17,9 +17,9 @@ This repository provides a structured template for machine learning and deep lea
    ```bash
    curl -sSL https://install.python-poetry.org | python3 -
    ```
-1.1 Change the folder name from 'project_template" to your project name.
+2.  Change the folder name from 'project_template" to your project name.
 
-2. Run the setup script
+3. Run the setup script
    ```bash
    bash setup.sh
    ```
@@ -31,11 +31,15 @@ This repository provides a structured template for machine learning and deep lea
    * Whether to include experiment and logging templates
    * Which code linters to use 
 
-3. Activate the virtual environment
+4. Activate the virtual environment
    ```bash
    poetry shell
    ```
-
+5. You migh need to run
+  ```bash
+   deactivate 
+   ```
+   TODO: Double Check this next time, and integrate it in the bash.
 ## 🔧 Configuration Structure (Hydra)
 
 The Hydra configuration follows a modular layout:
