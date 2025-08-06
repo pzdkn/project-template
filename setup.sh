@@ -53,8 +53,8 @@ done
 read -p "🧾 Description: " DESCRIPTION
 read -p "👤 Author name: " AUTHOR_NAME
 read -p "📧 Author email: " AUTHOR_EMAIL
-read -p "🐍 Python version [>=3.10]: " PYTHON_VERSION
-PYTHON_VERSION=${PYTHON_VERSION:-">=3.10"}  # Use default if left blank
+read -p "🐍 Python version [>=3.11]: " PYTHON_VERSION
+PYTHON_VERSION=${PYTHON_VERSION:-">=3.11"}  # Use default if left blank
 read -p "📁 Source folder [src]: " SRC_FOLDER
 SRC_FOLDER=${SRC_FOLDER:-"src"}  # Default to "src" if not specified
 
