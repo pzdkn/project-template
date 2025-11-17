@@ -134,7 +134,7 @@ fi
 # Add logging to README if enabled
 if [[ "$COPY_LOGGING" =~ ^[Yy]$ ]]; then
   cat <<EOF >> README.md
-    ├── logging/
+    ├── log_utils/
     │   └── ...
 EOF
 fi
@@ -182,10 +182,10 @@ read -p "📦 Copy logging templates? [Y/n]: " COPY_LOGGING
 COPY_LOGGING=${COPY_LOGGING:-"y"}
 
 if [[ "$COPY_LOGGING" =~ ^[Yy]$ ]]; then
-  echo "🧠 Copying logging utils to $SRC_FOLDER/$PROJECT_NAME/logging"
-  mkdir -p "$SRC_FOLDER/$PROJECT_NAME/logging"
-  cp -r ./templates/logging/* "$SRC_FOLDER/$PROJECT_NAME/logging"
-  touch "$SRC_FOLDER/$PROJECT_NAME/logging/__init__.py"
+  echo "🧠 Copying logging utils to $SRC_FOLDER/$PROJECT_NAME/log_utils"
+  mkdir -p "$SRC_FOLDER/$PROJECT_NAME/log_utils"
+  cp -r ./templates/log_utils/* "$SRC_FOLDER/$PROJECT_NAME/log_utils"
+  touch "$SRC_FOLDER/$PROJECT_NAME/log_utils/__init__.py"
 fi 
 
 echo "🧽 Copying .gitignore "
@@ -405,7 +405,7 @@ elif [[ "$COPY_EXPERIMENT" =~ ^[Yy]$ ]]; then
 fi
 
 # Check if logging folder is created when expected
-if [[ "$COPY_LOGGING" =~ ^[Yy]$ && ! -d "$SRC_FOLDER/$PROJECT_NAME/logging" ]]; then
+if [[ "$COPY_LOGGING" =~ ^[Yy]$ && ! -d "$SRC_FOLDER/$PROJECT_NAME/log_utils" ]]; then
   echo "❌ Logging templates not copied correctly!"
   VERIFICATION_PASSED=false
 elif [[ "$COPY_LOGGING" =~ ^[Yy]$ ]]; then
