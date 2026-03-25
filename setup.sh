@@ -6,6 +6,9 @@
 
 echo "=== 🐍 Python Project Setup with Poetry ==="
 
+BASE_DEFAULT_PYTHON_VERSION=">=3.11,<3.15"
+VISION_SAFE_PYTHON_VERSION=">=3.11,<3.14.1 || >3.14.1,<3.15"
+
 ########################################
 # 0. Check for existing pyproject.toml #
 ########################################
@@ -53,8 +56,6 @@ done
 read -p "🧾 Description: " DESCRIPTION
 read -p "👤 Author name: " AUTHOR_NAME
 read -p "📧 Author email: " AUTHOR_EMAIL
-read -p "🐍 Python version [<3.15,>=3.11]: " PYTHON_VERSION
-PYTHON_VERSION=${PYTHON_VERSION:-"<3.15,>=3.11"}  # Use default if left blank
 read -p "📁 Source folder [src]: " SRC_FOLDER
 SRC_FOLDER=${SRC_FOLDER:-"src"}  # Default to "src" if not specified
 
@@ -62,14 +63,41 @@ SRC_FOLDER=${SRC_FOLDER:-"src"}  # Default to "src" if not specified
 # 2. Ask If We Should Add Standard Dependencies via Poetry #
 ############################################################
 # These dependencies are commonly used in ML/DL/data projects.
-read -p "📦 Add default ML dependencies (torch, hydra-core, pytorch-lightning)? [Y/n]: " ADD_DEFAULT_DEPS
+read -p "📦 Add default ML dependencies (torch, hydra-core, lightning)? [Y/n]: " ADD_DEFAULT_DEPS
 ADD_DEFAULT_DEPS=${ADD_DEFAULT_DEPS:-"y"}
+
+if [[ "$ADD_DEFAULT_DEPS" =~ ^[Yy]$ ]]; then
+  read -p "🖼️  Add computer vision extras (torchvision)? [y/N]: " ADD_VISION_DEPS
+  ADD_VISION_DEPS=${ADD_VISION_DEPS:-"n"}
+else
+  ADD_VISION_DEPS="n"
+fi
 
 read -p "📊 Add data science libs (numpy, pandas, matplotlib, etc)? [Y/n]: " ADD_DS
 ADD_DS=${ADD_DS:-"y"}
 
 read -p "⚙️  Add dev dependencies (pytest, jupyter, ipykernel, wandb)? [Y/n]: " ADD_DEV_DEPS
 ADD_DEV_DEPS=${ADD_DEV_DEPS:-"y"}
+
+read -p "📦 Copy experiment templates? [Y/n]: " COPY_EXPERIMENT
+COPY_EXPERIMENT=${COPY_EXPERIMENT:-"y"}
+
+read -p "📦 Copy logging templates? [Y/n]: " COPY_LOGGING
+COPY_LOGGING=${COPY_LOGGING:-"y"}
+
+DEFAULT_PYTHON_VERSION="$BASE_DEFAULT_PYTHON_VERSION"
+if [[ "$ADD_VISION_DEPS" =~ ^[Yy]$ ]]; then
+  DEFAULT_PYTHON_VERSION="$VISION_SAFE_PYTHON_VERSION"
+  echo "ℹ️  torchvision currently excludes Python 3.14.1, so the default range will skip that patch release."
+fi
+
+read -p "🐍 Python version [$DEFAULT_PYTHON_VERSION]: " PYTHON_VERSION
+PYTHON_VERSION=${PYTHON_VERSION:-"$DEFAULT_PYTHON_VERSION"}
+
+if [[ "$ADD_VISION_DEPS" =~ ^[Yy]$ && ( "$PYTHON_VERSION" == "$BASE_DEFAULT_PYTHON_VERSION" || "$PYTHON_VERSION" == "<3.15,>=3.11" ) ]]; then
+  echo "ℹ️  Rewriting Python range to $VISION_SAFE_PYTHON_VERSION because torchvision excludes Python 3.14.1."
+  PYTHON_VERSION="$VISION_SAFE_PYTHON_VERSION"
+fi
 
 #######################################
 # 3. Write a Minimal pyproject.toml   #
@@ -167,9 +195,6 @@ if [[ ! -d "$TEMPLATE_DIR" ]]; then
 fi
 
 # Optionally copy experiment-related templates
-read -p "📦 Copy experiment templates? [Y/n]: " COPY_EXPERIMENT
-COPY_EXPERIMENT=${COPY_EXPERIMENT:-"y"}
-
 if [[ "$COPY_EXPERIMENT" =~ ^[Yy]$ ]]; then
   echo "🔬 Copying experiment setup to $SRC_FOLDER/$PROJECT_NAME/experiment"
   mkdir -p "$SRC_FOLDER/$PROJECT_NAME/experiment"
@@ -178,9 +203,6 @@ if [[ "$COPY_EXPERIMENT" =~ ^[Yy]$ ]]; then
 fi
 
 # Optionally copy logging utilities
-read -p "📦 Copy logging templates? [Y/n]: " COPY_LOGGING
-COPY_LOGGING=${COPY_LOGGING:-"y"}
-
 if [[ "$COPY_LOGGING" =~ ^[Yy]$ ]]; then
   echo "🧠 Copying logging utils to $SRC_FOLDER/$PROJECT_NAME/log_utils"
   mkdir -p "$SRC_FOLDER/$PROJECT_NAME/log_utils"
@@ -202,8 +224,13 @@ poetry install # Creates the virtual environment and lock file
 
 # Add common ML packages
 if [[ "$ADD_DEFAULT_DEPS" =~ ^[Yy]$ ]]; then
-  echo "📦 Adding ML deps with version pinning..."
-  poetry add torch torchvision hydra-core pytorch-lightning
+  echo "📦 Adding core ML deps with version pinning..."
+  poetry add torch hydra-core lightning
+fi
+
+if [[ "$ADD_VISION_DEPS" =~ ^[Yy]$ ]]; then
+  echo "🖼️  Adding computer vision deps..."
+  poetry add torchvision
 fi
 
 # Add common data science packages
